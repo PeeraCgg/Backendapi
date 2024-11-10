@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+id Int @id() @default(autoincrement())
+name String
+user String
+pass String
+status String @default("use")
+
+}
+
+model Otp {
+  id         Int       @id @default(autoincrement())
+  email      String    @unique
+  otp        String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+
+  usermain   Usermain? @relation(fields: [email], references: [email]) // Relation to Usermain based on email
+}
+
+model Usermain {
+  id                Int         @id @default(autoincrement())
+  name              String?     // ชื่อ (optional)
+  surname           String?     // นามสกุล (optional)
+  fullname          String?     // รวมชื่อและนามสกุลจาก name และ surname
+  mobile            String?     @unique
+  birthdate         DateTime?
+  startPrivilegeDate DateTime?  // กำหนดวันที่เริ่มสิทธิพิเศษ (optional)
+  email             String      @unique
+  pdpa              CheckPDPA?  // สถานะ PDPA consent
+
+  otps              Otp[]       // ลิสต์ OTP ที่เกี่ยวข้องกับ email ของผู้ใช้
+  
+  @@unique([mobile, email])     // กำหนด mobile และ email เป็น unique key
+}
+
+model CheckPDPA {
+  id        Int      @id @default(autoincrement())
+  checkbox1 Boolean
+  checkbox2 Boolean
+  createdAt DateTime @default(now())
+  userId    Int      @unique
+  user      Usermain @relation(fields: [userId], references: [id])
+}
+
